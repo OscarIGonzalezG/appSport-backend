@@ -45,10 +45,16 @@ router.post('/login', async (req, res) => {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: 'Credenciales inválidas' });
+
+        if (!user) {
+            return res.status(400).json({ field: 'email', message: 'Correo no registrado' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Credenciales inválidas' });
+
+        if (!isMatch) {
+            return res.status(400).json({ field: 'password', message: 'Contraseña incorrecta' });
+        }
 
         const token = jwt.sign(
             { id: user._id, role:user.role }, 
@@ -57,8 +63,10 @@ router.post('/login', async (req, res) => {
         );
 
         res.status(200).json({ token });
+
     } catch (error) {
-        res.status(500).json({ message: 'Error al iniciar sesión' });
+        console.error('Error al iniciar sesión:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
     }
 });
 
